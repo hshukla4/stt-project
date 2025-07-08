@@ -1,0 +1,36 @@
+{
+  "name": "stt-server",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@types/dom-mediacapture-record": "^1.0.22",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "formidable": "^3.5.4",
+    "multer": "^2.0.1",
+    "next": "^15.3.3",
+    "openai": "^5.5.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "recordrtc": "^5.6.2",
+    "whisper-node": "^1.1.1"
+  },
+  "description": "",
+  "main": "server.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.0.3",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "typescript": "^5.8.3"
+  }
+}

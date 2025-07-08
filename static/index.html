@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STT - Dual Engine Comparison</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .main-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .engine-selector {
+            margin-bottom: 20px;
+        }
+
+        .engine-selector label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .engine-selector select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: white;
+        }
+
+        .language-selector {
+            margin-bottom: 30px;
+        }
+
+        .recording-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .record-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .record-button:hover {
+            transform: scale(1.05);
+        }
+
+        .record-button.recording {
+            background: linear-gradient(135deg, #ff3838, #ff1744);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .record-button.processing {
+            background: linear-gradient(135deg, #ffa726, #ff9800);
+            cursor: not-allowed;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .status {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        .timer {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ff3838;
+            margin-bottom: 20px;
+            min-height: 35px;
+        }
+
+        .dual-results {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .engine-result {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 4px solid #667eea;
+        }
+
+        .engine-result.openai {
+            border-left-color: #00D4AA;
+        }
+
+        .engine-result h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .engine-result.openai h3 {
+            color: #00D4AA;
+        }
+
+        .transcription-text {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            min-height: 80px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .engine-status {
+            font-size: 0.9rem;
+            margin-top: 10px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .status-error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .status-not-configured {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .messages {
+            margin-top: 20px;
+        }
+
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .copy-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .dual-results {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎤 Dual Engine STT</h1>
+            <p>Compare Local Whisper vs OpenAI Whisper</p>
+        </div>
+
+        <div class="main-card">
+            <!-- Engine Selector -->
+            <div class="engine-selector">
+                <label for="engineSelect">Engine Mode:</label>
+                <select id="engineSelect">
+                    <option value="both">🔄 Both Engines (Compare Results)</option>
+                    <option value="local">🏠 Local Whisper Only</option>
+                    <option value="openai">🤖 OpenAI Whisper Only</option>
+                </select>
+            </div>
+
+            <!-- Language Selector -->
+            <div class="language-selector">
+                <label for="languageSelect">Select Language:</label>
+                <select id="languageSelect">
+                    <option value="auto">🌐 Auto Detect</option>
+                    <option value="en-IN">🇮🇳 English (India)</option>
+                    <option value="hi-IN">🇮🇳 Hindi (हिंदी)</option>
+                    <option value="gu-IN">🇮🇳 Gujarati (ગુજરાતી)</option>
+                </select>
+            </div>
+
+            <!-- Recording Section -->
+            <div class="recording-section">
+                <button id="recordButton" class="record-button">
+                    <span id="recordIcon">🎤</span>
+                </button>
+                <div id="status" class="status">Click to start recording</div>
+                <div id="timer" class="timer"></div>
+                <audio id="audioPlayer" controls style="display: none; width: 100%; margin: 15px 0;"></audio>
+            </div>
+
+            <!-- Loading Animation -->
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Processing with both engines...</p>
+            </div>
+
+            <!-- Dual Results -->
+            <div id="dualResults" class="dual-results" style="display: none;">
+                <div class="engine-result">
+                    <h3>
+                        🏠 Local Whisper
+                        <button class="copy-button" onclick="copyText('localText')">Copy</button>
+                    </h3>
+                    <div id="localText" class="transcription-text"></div>
+                    <div id="localStatus" class="engine-status"></div>
+                </div>
+
+                <div class="engine-result openai">
+                    <h3>
+                        🤖 OpenAI Whisper
+                        <button class="copy-button" onclick="copyText('openaiText')">Copy</button>
+                    </h3>
+                    <div id="openaiText" class="transcription-text"></div>
+                    <div id="openaiStatus" class="engine-status"></div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div id="messages" class="messages"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8082';
+        
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        let recordingTimer;
+        let recordingStartTime;
+
+        const recordButton = document.getElementById('recordButton');
+        const recordIcon = document.getElementById('recordIcon');
+        const status = document.getElementById('status');
+        const timer = document.getElementById('timer');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const loading = document.getElementById('loading');
+        const dualResults = document.getElementById('dualResults');
+        const messages = document.getElementById('messages');
+        const engineSelect = document.getElementById('engineSelect');
+        const languageSelect = document.getElementById('languageSelect');
+
+        // Initialize
+        console.log('🎤 Dual Engine STT Loading...');
+        checkServerHealth();
+
+        async function checkServerHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                let statusMsg = '✅ ';
+                if (data.engines.local_whisper) statusMsg += 'Local Whisper ready';
+                if (data.engines.openai_whisper) statusMsg += ' + OpenAI ready';
+                else statusMsg += ' (OpenAI not configured)';
+                
+                showMessage(statusMsg, 'success');
+                status.textContent = 'Ready to record with dual engines!';
+            } catch (error) {
+                showMessage('❌ Cannot connect to backend', 'error');
+            }
+        }
+
+        recordButton.addEventListener('click', toggleRecording);
+
+        async function toggleRecording() {
+            if (!isRecording) {
+                await startRecording();
+            } else {
+                stopRecording();
+            }
+        }
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        sampleRate: 44100,
+                        channelCount: 1,
+                        volume: 1.0
+                    }
+                });
+                
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    audioPlayer.src = audioUrl;
+                    audioPlayer.style.display = 'block';
+                    
+                    await transcribeAudio(audioBlob, 'recorded_audio.webm');
+                };
+                
+                mediaRecorder.start(100);
+                isRecording = true;
+                recordingStartTime = Date.now();
+                
+                recordButton.classList.add('recording');
+                recordIcon.textContent = '⏹️';
+                status.textContent = 'Recording... Speak now!';
+                
+                recordingTimer = setInterval(updateTimer, 100);
+                
+            } catch (error) {
+                showMessage('❌ Could not access microphone: ' + error.message, 'error');
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                
+                isRecording = false;
+                recordButton.classList.remove('recording');
+                recordButton.classList.add('processing');
+                recordIcon.textContent = '⏳';
+                status.textContent = 'Processing with engines...';
+                
+                clearInterval(recordingTimer);
+                timer.textContent = '';
+            }
+        }
+
+        function updateTimer() {
+            if (isRecording) {
+                const elapsed = Date.now() - recordingStartTime;
+                const seconds = Math.floor(elapsed / 1000);
+                const minutes = Math.floor(seconds / 60);
+                const displaySeconds = seconds % 60;
+                timer.textContent = `${minutes.toString().padStart(2, '0')}:${displaySeconds.toString().padStart(2, '0')}`;
+            }
+        }
+
+        async function transcribeAudio(audioBlob, filename) {
+            loading.style.display = 'block';
+            dualResults.style.display = 'none';
+            clearMessages();
+            
+            try {
+                const formData = new FormData();
+                formData.append('audio', audioBlob, filename);
+                formData.append('language', languageSelect.value);
+                formData.append('engines', engineSelect.value);
+                
+                const response = await fetch(`${API_BASE}/transcribe`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Transcription results:', data);
+                
+                displayDualResults(data);
+                showMessage('✅ Dual transcription completed!', 'success');
+                
+            } catch (error) {
+                showMessage('❌ Transcription failed: ' + error.message, 'error');
+            } finally {
+                loading.style.display = 'none';
+                recordButton.classList.remove('processing');
+                recordIcon.textContent = '🎤';
+                status.textContent = 'Click to start recording';
+            }
+        }
+
+        function displayDualResults(data) {
+            if (data.dual_mode && data.engines) {
+                // Dual engine results
+                const localResult = data.engines.local_whisper;
+                const openaiResult = data.engines.openai_whisper;
+                
+                // Local Whisper
+                if (localResult) {
+                    document.getElementById('localText').textContent = localResult.text;
+                    const localStatus = document.getElementById('localStatus');
+                    localStatus.textContent = localResult.status === 'success' ? 
+                        `✅ Model: ${localResult.model_size}` : 
+                        `❌ ${localResult.status}`;
+                    localStatus.className = `engine-status status-${localResult.status}`;
+                }
+                
+                // OpenAI Whisper
+                if (openaiResult) {
+                    document.getElementById('openaiText').textContent = openaiResult.text;
+                    const openaiStatus = document.getElementById('openaiStatus');
+                    openaiStatus.textContent = openaiResult.status === 'success' ? 
+                        `✅ Model: whisper-1` : 
+                        openaiResult.status === 'not_configured' ?
+                        `⚠️ Not configured` :
+                        `❌ ${openaiResult.status}`;
+                    openaiStatus.className = `engine-status status-${openaiResult.status}`;
+                }
+                
+                dualResults.style.display = 'grid';
+            } else {
+                // Single engine result - convert to dual display
+                const isLocal = data.engine === 'local_whisper';
+                
+                document.getElementById('localText').textContent = isLocal ? data.text : 'Not processed';
+                document.getElementById('openaiText').textContent = !isLocal ? data.text : 'Not processed';
+                
+                dualResults.style.display = 'grid';
+            }
+        }
+
+        function copyText(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showMessage('📋 Text copied to clipboard!', 'success');
+            });
+        }
+
+        function showMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type;
+            messageDiv.textContent = message;
+            messages.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        function clearMessages() {
+            messages.innerHTML = '';
+        }
+
+        console.log('✅ Dual Engine STT ready!');
+    </script>
+</body>
+</html>
